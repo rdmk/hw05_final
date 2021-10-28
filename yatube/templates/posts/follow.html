@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Ваши подписки{% endblock %}
+{% block content %}
+  {% include 'posts/includes/switcher.html' %}
+  {% for post in page_obj %}
+    <article>
+      <ul>
+        <li>Автор: {{ post.author.username }}
+        <li>Дата публикации: {{ post.pub_date|date:"d E Y" }}
+      </ul>
+      <p>{{ post.text|linebreaksbr }}</p>
+      <a href="{% url 'posts:post_detail' post.id %}">подробная информация</a>
+    </article>
+    {% if post.group_id %}
+      <a href="{% url 'posts:group_list' post.group.slug %}">все записи группы</a>
+    {% endif %}
+    {% if not forloop.last %}<hr>{% endif %}
+  {% endfor %}
+  {% include 'includes/paginator.html' %}
+{% endblock %}
