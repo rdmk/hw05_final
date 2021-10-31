@@ -5,7 +5,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from ..models import Comment, Follow, Group, Post
@@ -14,6 +14,7 @@ User = get_user_model()
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
 
+@override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
 class PostPagesTests(TestCase):
     @classmethod
     def setUpClass(cls):
@@ -248,7 +249,7 @@ class PostPagesTests(TestCase):
         self.assertEqual(post_description, self.group.description)
         self.assertEqual(post_gif, self.test_posts[-1].image)
 
-    def test_profile_page_show_correct_context(self):
+    def test_profile_page_show_correct_context_with_image(self):
         """Шаблон profile сформирован с правильным контекстом,
         в том числе и картинка.
         """
@@ -368,10 +369,9 @@ class PostPagesTests(TestCase):
         self.authorized_client_follower.get(
             reverse('posts:profile_follow', kwargs={'username': self.user})
         )
-        Post.objects.create(
+        post = Post.objects.create(
             text="Тест подписки",
-            author=self.user,
-            pk=5555
+            author=self.user
         )
         response = self.authorized_client_follower.get(reverse(
             'posts:follow_index')
@@ -379,7 +379,7 @@ class PostPagesTests(TestCase):
         object = response.context['page_obj'][0]
         post_text = object.text
         post_author = object.author
-        self.assertEqual(post_text, "Тест подписки")
+        self.assertEqual(post_text, post.text)
         self.assertEqual(post_author, self.user)
 
     def test_follow_page_if_not_follower(self):

@@ -2,13 +2,11 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.decorators.cache import cache_page
 
 from .forms import CommentForm, PostForm
 from .models import Follow, Group, Post, User
 
 
-@cache_page(20)
 def index(request):
     post_list = Post.objects.all()
     paginator = Paginator(post_list, settings.NUMBER_OF_POSTS)
@@ -115,11 +113,8 @@ def add_comment(request, post_id):
 
 @login_required
 def follow_index(request):
-    following_authors = Follow.objects.filter(user=request.user)
-    posts = []
-    for author in following_authors:
-        posts.extend(author.author.posts.all())
-    paginator = Paginator(posts, settings.NUMBER_OF_POSTS)
+    post_list = Post.objects.filter(author__following__user=request.user)
+    paginator = Paginator(post_list, settings.NUMBER_OF_POSTS)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     context = {
@@ -130,11 +125,10 @@ def follow_index(request):
 
 @login_required
 def profile_follow(request, username):
-    author = User.objects.get(username=username)
+    author = get_object_or_404(User, username=username)
     user = request.user
-    following = Follow.objects.filter(user=user, author=author).exists()
-    if author != user and not following:
-        Follow.objects.create(
+    if author != user:
+        Follow.objects.get_or_create(
             user=user,
             author=author
         )
@@ -143,7 +137,7 @@ def profile_follow(request, username):
 
 @login_required
 def profile_unfollow(request, username):
-    author = User.objects.get(username=username)
+    author = get_object_or_404(User, username=username)
     user = request.user
     Follow.objects.get(
         user=user,
