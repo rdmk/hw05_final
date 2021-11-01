@@ -3,7 +3,7 @@
 {% block content %}
 {% load thumbnail %}
 {% load cache %}
-  {% cache 20 index_page_cache %}
+  {% cache 20 index_page page_obj.number%}
     {% include 'posts/includes/switcher.html' %}
     {% for post in page_obj %}
       <article>

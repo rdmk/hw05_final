@@ -389,8 +389,7 @@ class PostPagesTests(TestCase):
         self.authorized_client_follower.force_login(self.user_follower)
         Post.objects.create(
             text="Тест подписки",
-            author=self.user,
-            pk=6666
+            author=self.user
         )
         response = self.authorized_client_follower.get(reverse(
             'posts:follow_index')
